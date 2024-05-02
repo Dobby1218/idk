@@ -1,0 +1,116 @@
+import java.util.*;
+
+class Graph {
+    private int numVertices;
+    private List<List<Edge>> adjacencyList;
+
+    public Graph(int numVertices) {
+        this.numVertices = numVertices;
+        adjacencyList = new ArrayList<>();
+        for (int i = 0; i < numVertices; i++) {
+            adjacencyList.add(new ArrayList<>());
+        }
+    }
+
+    public void addEdge(int source, int destination, int weight) {
+        adjacencyList.get(source).add(new Edge(destination, weight));
+        adjacencyList.get(destination).add(new Edge(source, weight)); // For undirected graph
+    }
+
+    public int[] dijkstra(int source) {
+        int[] dist = new int[numVertices];
+        boolean[] visited = new boolean[numVertices];
+        int[] prev = new int[numVertices];
+        Arrays.fill(dist, Integer.MAX_VALUE);
+        Arrays.fill(prev, -1);
+
+        PriorityQueue<Node> minHeap = new PriorityQueue<>(Comparator.comparingInt(node -> node.distance));
+        minHeap.offer(new Node(source, 0));
+        dist[source] = 0;
+
+        while (!minHeap.isEmpty()) {
+            Node currentNode = minHeap.poll();
+            int currentVertex = currentNode.vertex;
+            if (visited[currentVertex]) continue;
+            visited[currentVertex] = true;
+
+            for (Edge neighbor : adjacencyList.get(currentVertex)) {
+                int neighborVertex = neighbor.destination;
+                int neighborWeight = neighbor.weight;
+
+                if (!visited[neighborVertex] && dist[currentVertex] != Integer.MAX_VALUE &&
+                        dist[currentVertex] + neighborWeight < dist[neighborVertex]) {
+                    dist[neighborVertex] = dist[currentVertex] + neighborWeight;
+                    prev[neighborVertex] = currentVertex;
+                    minHeap.offer(new Node(neighborVertex, dist[neighborVertex]));
+                }
+            }
+        }
+        return dist;
+    }
+
+    private static class Node {
+        int vertex;
+        int distance;
+
+        public Node(int vertex, int distance) {
+            this.vertex = vertex;
+            this.distance = distance;
+        }
+    }
+
+    private static class Edge {
+        int destination;
+        int weight;
+
+        public Edge(int destination, int weight) {
+            this.destination = destination;
+            this.weight = weight;
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.print("Enter the number of vertices: ");
+        int numVertices = scanner.nextInt();
+        Graph graph = new Graph(numVertices);
+
+        int choice;
+        do {
+            System.out.println("\nMenu:");
+            System.out.println("1. Add an edge");
+            System.out.println("2. Find shortest distances from a source vertex");
+            System.out.println("3. Exit");
+            System.out.print("Enter your choice: ");
+            choice = scanner.nextInt();
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter source vertex: ");
+                    int source = scanner.nextInt();
+                    System.out.print("Enter destination vertex: ");
+                    int destination = scanner.nextInt();
+                    System.out.print("Enter weight of the edge: ");
+                    int weight = scanner.nextInt();
+                    graph.addEdge(source, destination, weight);
+                    break;
+                case 2:
+                    System.out.print("Enter the source vertex: ");
+                    int sourceVertex = scanner.nextInt();
+                    int[] shortestDistances = graph.dijkstra(sourceVertex);
+                    System.out.println("Shortest distances from source " + sourceVertex + " to all vertices:");
+                    for (int i = 0; i < numVertices; i++) {
+                        System.out.println("Vertex " + i + ": " + shortestDistances[i]);
+                    }
+                    break;
+                case 3:
+                    System.out.println("Exiting...");
+                    break;
+                default:
+                    System.out.println("Invalid choice! Please enter again.");
+            }
+        } while (choice != 3);
+        scanner.close();
+    }
+}
